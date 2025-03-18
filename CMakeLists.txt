@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(temporalrw)
 set(CMAKE_CXX_STANDARD 14)
-set(TEMPORALRW_VERSION 0.0.1)
+set(TEMPORAL_RW_VERSION 0.0.1)
 
 option(WITH_CUDA "Enable CUDA support" OFF)
 option(WITH_PYTHON "Link to Python when building" ON)
@@ -39,19 +39,19 @@ target_include_directories(${PROJECT_NAME} INTERFACE
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-set(TEMPORALRW_CMAKECONFIG_INSTALL_DIR "share/cmake/TemporalRW" CACHE STRING "install path for TemporalRWConfig.cmake")
+set(TEMPORAL_RW_CMAKECONFIG_INSTALL_DIR "share/cmake/TemporalRW" CACHE STRING "install path for TemporalRWConfig.cmake")
 
 configure_package_config_file(cmake/TemporalRWConfig.cmake.in
   "${CMAKE_CURRENT_BINARY_DIR}/TemporalRWConfig.cmake"
-  INSTALL_DESTINATION ${TEMPORALRW_CMAKECONFIG_INSTALL_DIR})
+  INSTALL_DESTINATION ${TEMPORAL_RW_CMAKECONFIG_INSTALL_DIR})
 
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/TemporalRWConfigVersion.cmake
-  VERSION ${TEMPORALRW_VERSION}
+  VERSION ${TEMPORAL_RW_VERSION}
   COMPATIBILITY AnyNewerVersion)
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/TemporalRWConfig.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/TemporalRWConfigVersion.cmake
-  DESTINATION ${TEMPORALRW_CMAKECONFIG_INSTALL_DIR})
+  DESTINATION ${TEMPORAL_RW_CMAKECONFIG_INSTALL_DIR})
 
 install(TARGETS ${PROJECT_NAME}
   EXPORT TemporalRWTargets
@@ -60,7 +60,7 @@ install(TARGETS ${PROJECT_NAME}
 
 install(EXPORT TemporalRWTargets
   NAMESPACE TemporalRW::
-  DESTINATION ${TEMPORALRW_CMAKECONFIG_INSTALL_DIR})
+  DESTINATION ${TEMPORAL_RW_CMAKECONFIG_INSTALL_DIR})
 
 install(FILES ${HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 install(FILES

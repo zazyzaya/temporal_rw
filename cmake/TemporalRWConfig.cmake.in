@@ -1,7 +1,7 @@
 # TemporalRWConfig.cmake
 # --------------------
 #
-# Exported targets:: Cluster
+# Exported targets:: TemporalRW
 #
 
 @PACKAGE_INIT@

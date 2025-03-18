@@ -6,7 +6,7 @@ import torch
 __version__ = '0.0.1'
 
 for library in [
-        '_temporal_rw'
+        '_version', '_temporal_rw'
 ]:
     cuda_spec = importlib.machinery.PathFinder().find_spec(
         f'{library}_cuda', [osp.dirname(__file__)])
