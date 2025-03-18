@@ -21,15 +21,15 @@ PyMODINIT_FUNC PyInit__temporal_rw_cpu(void) { return NULL; }
 
 TEMPORAL_RW_API std::tuple<torch::Tensor, torch::Tensor>
 temporal_random_walk(torch::Tensor rowptr, torch::Tensor col, torch::Tensor ts, torch::Tensor start,
-            int64_t walk_length, double p, double q) {
+            int64_t walk_length) {
   if (rowptr.device().is_cuda()) {
 #ifdef WITH_CUDA
-    return temporal_random_walk_cuda(rowptr, col, ts, start, walk_length, p, q);
+    return temporal_random_walk_cuda(rowptr, col, ts, start, walk_length);
 #else
     AT_ERROR("Not compiled with CUDA support");
 #endif
   } else {
-    return temporal_random_walk_cpu(rowptr, col, ts, start, walk_length, p, q);
+    return temporal_random_walk_cpu(rowptr, col, ts, start, walk_length);
   }
 }
 

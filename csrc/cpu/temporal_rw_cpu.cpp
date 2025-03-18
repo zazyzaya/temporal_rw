@@ -83,7 +83,7 @@ bool inline is_neighbor(const int64_t *rowptr, const int64_t *col, int64_t v,
 
 std::tuple<torch::Tensor, torch::Tensor>
 temporal_random_walk_cpu(torch::Tensor rowptr, torch::Tensor col, torch::Tensor ts, torch::Tensor start,
-                int64_t walk_length, double p, double q) {
+                int64_t walk_length) {
   CHECK_CPU(rowptr);
   CHECK_CPU(col);
   CHECK_CPU(start);
@@ -104,7 +104,6 @@ temporal_random_walk_cpu(torch::Tensor rowptr, torch::Tensor col, torch::Tensor 
   auto n_out_data = n_out.data_ptr<int64_t>();
   auto e_out_data = e_out.data_ptr<int64_t>();
 
-  // p and q not implemented
   uniform_sampling(rowptr_data, col_data, ts_data, start_data, n_out_data, e_out_data,
                      start.numel(), walk_length);
 

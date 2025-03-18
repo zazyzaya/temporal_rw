@@ -84,7 +84,7 @@ __global__ void uniform_sampling_kernel(const int64_t *rowptr,
 
 std::tuple<torch::Tensor, torch::Tensor>
 temporal_random_walk_cuda(torch::Tensor rowptr, torch::Tensor col, torch::Tensor ts, torch::Tensor start,
-                 int64_t walk_length, double p, double q) {
+                 int64_t walk_length) {
   CHECK_CUDA(rowptr);
   CHECK_CUDA(col);
   CHECK_CUDA(start);
@@ -104,7 +104,6 @@ temporal_random_walk_cuda(torch::Tensor rowptr, torch::Tensor col, torch::Tensor
   auto rand = torch::rand({start.size(0), walk_length},
                             start.options().dtype(torch::kFloat));
 
-  // p and q not implemented
   uniform_sampling_kernel<<<BLOCKS(start.numel()), THREADS, 0, stream>>>(
       rowptr.data_ptr<int64_t>(), col.data_ptr<int64_t>(), ts.data_ptr<int64_t>(),
       start.data_ptr<int64_t>(), rand.data_ptr<float>(),

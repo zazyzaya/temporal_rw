@@ -10,10 +10,6 @@ def temporal_rw(
     ts: Tensor,
     start: Tensor,
     walk_length: int,
-    p: float = 1,
-    q: float = 1,
-    coalesced: bool = True,
-    num_nodes: Optional[int] = None,
     return_edge_indices: bool = False,
 ) -> Union[Tensor, Tuple[Tensor, Tensor]]:
     """Samples random walks of length :obj:`walk_length` from all node indices
@@ -47,7 +43,7 @@ def temporal_rw(
     :rtype: :class:`LongTensor`
     """
     node_seq, edge_seq = torch.ops.torch_cluster.temporal_random_walk(
-        rowptr, col, ts, start, walk_length, p, q)
+        rowptr, col, ts, start, walk_length)
 
     if return_edge_indices:
         return node_seq, edge_seq

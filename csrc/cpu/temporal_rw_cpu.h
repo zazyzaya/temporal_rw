@@ -4,4 +4,4 @@
 
 std::tuple<torch::Tensor, torch::Tensor>
 temporal_random_walk_cpu(torch::Tensor rowptr, torch::Tensor col, torch::Tensor ts, torch::Tensor start,
-    int64_t walk_length, double p, double q);
+    int64_t walk_length);

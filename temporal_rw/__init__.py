@@ -3,7 +3,7 @@ import os.path as osp
 
 import torch
 
-__version__ = '1.6.3'
+__version__ = '0.0.1'
 
 for library in [
         '_temporal_rw'
@@ -29,31 +29,15 @@ if torch.version.cuda is not None and cuda_version != -1:  # pragma: no cover
 
     if t_major != major:
         raise RuntimeError(
-            f'Detected that PyTorch and torch_cluster were compiled with '
+            f'Detected that PyTorch and temporal_rw were compiled with '
             f'different CUDA versions. PyTorch has CUDA version '
-            f'{t_major}.{t_minor} and torch_cluster has CUDA version '
-            f'{major}.{minor}. Please reinstall the torch_cluster that '
+            f'{t_major}.{t_minor} and temporal_rw has CUDA version '
+            f'{major}.{minor}. Please reinstall the temporal_rw that '
             f'matches your PyTorch install.')
 
-from .fps import fps  # noqa
-from .graclus import graclus_cluster  # noqa
-from .grid import grid_cluster  # noqa
-from .knn import knn, knn_graph  # noqa
-from .nearest import nearest  # noqa
-from .radius import radius, radius_graph  # noqa
-from .rw import random_walk  # noqa
-from .sampler import neighbor_sampler  # noqa
+from .temporal_rw import temporal_rw
 
 __all__ = [
-    'graclus_cluster',
-    'grid_cluster',
-    'fps',
-    'nearest',
-    'knn',
-    'knn_graph',
-    'radius',
-    'radius_graph',
-    'random_walk',
-    'neighbor_sampler',
+    'temporal_rw',
     '__version__',
 ]

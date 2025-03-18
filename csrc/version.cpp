@@ -1,7 +1,7 @@
 #ifdef WITH_PYTHON
 #include <Python.h>
 #endif
-#include "cluster.h"
+#include "temporal_rw.h"
 #include "macros.h"
 #include <torch/script.h>
 
@@ -23,8 +23,8 @@ PyMODINIT_FUNC PyInit__version_cpu(void) { return NULL; }
 #endif
 #endif
 
-namespace cluster {
-CLUSTER_API int64_t cuda_version() noexcept {
+namespace temporal_rw {
+TEMPORAL_RW_API int64_t cuda_version() noexcept {
 #ifdef WITH_CUDA
 #ifdef USE_ROCM
   return HIP_VERSION;
@@ -35,7 +35,7 @@ CLUSTER_API int64_t cuda_version() noexcept {
   return -1;
 #endif
 }
-} // namespace cluster
+} // namespace temporal_rw
 
 static auto registry = torch::RegisterOperators().op(
-    "torch_cluster::cuda_version", [] { return cluster::cuda_version(); });
+    "temporal_rw::cuda_version", [] { return temporal_rw::cuda_version(); });
