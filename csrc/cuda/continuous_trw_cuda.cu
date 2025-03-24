@@ -1,4 +1,4 @@
-#include "temporal_rw_cuda.h"
+#include "continuous_trw_cuda.h"
 
 #include <ATen/cuda/CUDAContext.h>
 #include <curand.h>
@@ -10,14 +10,14 @@
 #define BLOCKS(N) (N + THREADS - 1) / THREADS
 
 
-__global__ void uniform_sampling_kernel(const int64_t *rowptr,
+__global__ void continuous_uniform_sampling_kernel(const int64_t *rowptr,
                                         const int64_t *col,
                                         const int64_t *ts,
                                         const int64_t *start, const float *rand,
                                         int64_t *n_out, int64_t *e_out,
                                         const int64_t walk_length,
-                                        const int64_t t_start,
-                                        const int64_t t_end,
+                                        int64_t *t_start,
+                                        int64_t *t_end,
                                         const bool reverse,
                                         const int64_t numel) {
 
@@ -28,7 +28,7 @@ __global__ void uniform_sampling_kernel(const int64_t *rowptr,
 
     n_out[thread_idx] = n_cur;
 
-    int64_t t = (reverse) ? t_end : t_start;
+    int64_t t = (reverse) ? t_end[thread_idx] : t_start[thread_idx];
 
     for (int64_t l = 0; l < walk_length; l++) {
       row_start = rowptr[n_cur], row_end = rowptr[n_cur + 1];
@@ -39,12 +39,12 @@ __global__ void uniform_sampling_kernel(const int64_t *rowptr,
       } else {
         // When traversing backward keep row_start the same, and decrease row_end
         if (reverse) {
-          row_start = (t_start) ? binary_search_min_cuda(t_start, row_start, row_end, ts) : row_start;
+          row_start = (t_start[thread_idx]) ? binary_search_min_cuda(t_start[thread_idx], row_start, row_end, ts) : row_start;
           row_end = binary_search_max_cuda(t, row_start, row_end, ts);
         // Else, keep row_end the same and increase row_start
         } else {
           row_start = binary_search_min_cuda(t, row_start, row_end, ts);
-          row_end = (t_end) ? binary_search_max_cuda(t_end, row_start, row_end, ts) : row_end;
+          row_end = (t_end[thread_idx]) ? binary_search_max_cuda(t_end[thread_idx], row_start, row_end, ts) : row_end;
         }
       }
 
@@ -64,18 +64,22 @@ __global__ void uniform_sampling_kernel(const int64_t *rowptr,
 
 
 std::tuple<torch::Tensor, torch::Tensor>
-temporal_random_walk_cuda(torch::Tensor rowptr, torch::Tensor col, torch::Tensor ts, torch::Tensor start,
-                 int64_t walk_length, int64_t t_start, int64_t t_end, bool reverse) {
+continuous_trw_cuda(torch::Tensor rowptr, torch::Tensor col, torch::Tensor ts, torch::Tensor start,
+                 int64_t walk_length, torch::Tensor t_start, torch::Tensor t_end, bool reverse) {
   CHECK_CUDA(rowptr);
   CHECK_CUDA(col);
   CHECK_CUDA(start);
   CHECK_CUDA(ts);
+  CHECK_CUDA(t_start);
+  CHECK_CUDA(t_end);
   c10::cuda::MaybeSetDevice(rowptr.get_device());
 
   CHECK_INPUT(rowptr.dim() == 1);
   CHECK_INPUT(col.dim() == 1);
   CHECK_INPUT(start.dim() == 1);
   CHECK_INPUT(ts.dim() == 1);
+  CHECK_INPUT(t_start.dim() == 1);
+  CHECK_INPUT(t_end.dim() == 1);
 
   auto n_out = torch::empty({walk_length + 1, start.size(0)}, start.options());
   auto e_out = torch::empty({walk_length, start.size(0)}, start.options());
@@ -85,12 +89,12 @@ temporal_random_walk_cuda(torch::Tensor rowptr, torch::Tensor col, torch::Tensor
   auto rand = torch::rand({start.size(0), walk_length},
                             start.options().dtype(torch::kFloat));
 
-  uniform_sampling_kernel<<<BLOCKS(start.numel()), THREADS, 0, stream>>>(
+  continuous_uniform_sampling_kernel<<<BLOCKS(start.numel()), THREADS, 0, stream>>>(
       rowptr.data_ptr<int64_t>(), col.data_ptr<int64_t>(), ts.data_ptr<int64_t>(),
       start.data_ptr<int64_t>(), rand.data_ptr<float>(),
       n_out.data_ptr<int64_t>(), e_out.data_ptr<int64_t>(),
-      walk_length, t_start, t_end, reverse,
-      start.numel());
+      walk_length, t_start.data_ptr<int64_t>(), t_end.data_ptr<int64_t>(),
+      reverse, start.numel());
 
   return std::make_tuple(n_out.t().contiguous(), e_out.t().contiguous());
 }

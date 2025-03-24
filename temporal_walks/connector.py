@@ -11,8 +11,8 @@ def temporal_rw(
     start: Tensor,
     walk_length: int,
     return_edge_indices: bool = False,
-    min_ts: int = None,
-    max_ts: int = None,
+    min_ts: Union[int, Tensor] = None,
+    max_ts: Union[int, Tensor] = None,
     reverse: bool = False
 ) -> Union[Tensor, Tuple[Tensor, Tensor]]:
     """Samples random walks of length :obj:`walk_length` from all node indices
@@ -45,13 +45,32 @@ def temporal_rw(
 
     :rtype: :class:`LongTensor`
     """
-    if min_ts is None:
-        min_ts = 0
-    if max_ts is None:
-        max_ts = 0
+    use_discrete = (isinstance(max_ts, int) or isinstance(min_ts, int)) or (max_ts is None and min_ts is None)
 
-    node_seq, edge_seq = torch.ops.torch_cluster.temporal_random_walk(
-        rowptr, col, ts, start, walk_length, min_ts, max_ts, reverse)
+    # Single min/max_ts applies to every node being traversed
+    if use_discrete:
+        if min_ts is None:
+            min_ts = 0
+        if max_ts is None:
+            max_ts = 0 if not reverse else ts.max().item()
+
+        node_seq, edge_seq = torch.ops.temporal_walks.temporal_random_walk(
+            rowptr, col, ts, start, walk_length, min_ts, max_ts, reverse)
+
+    # Tensor with individual min/max_ts used per-node in the walk
+    else:
+        assert  (isinstance(min_ts, Tensor) or min_ts is None) and \
+                (isinstance(max_ts, Tensor) or max_ts is None), \
+                "`max_ts` and `min_ts` must both be Tensors, both be ints, or one or both may be `None`"
+
+        if min_ts is None:
+            min_ts = torch.zeros_like(col)
+        if max_ts is None:
+            val = 0 if not reverse else ts.max().item()
+            max_ts = torch.full_like(col, val)
+
+        node_seq, edge_seq = torch.ops.temporal_walks.continuous_trw(
+            rowptr, col, ts, start, walk_length, min_ts, max_ts, reverse)
 
     if return_edge_indices:
         return node_seq, edge_seq

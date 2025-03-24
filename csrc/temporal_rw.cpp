@@ -34,4 +34,4 @@ temporal_random_walk(torch::Tensor rowptr, torch::Tensor col, torch::Tensor ts, 
 }
 
 static auto registry =
-    torch::RegisterOperators().op("temporal_rw::temporal_random_walk", &temporal_random_walk);
+    torch::RegisterOperators().op("temporal_walks::temporal_random_walk", &temporal_random_walk);

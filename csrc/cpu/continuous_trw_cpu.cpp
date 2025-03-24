@@ -1,14 +1,14 @@
-#include "temporal_rw_cpu.h"
+#include "continuous_trw_cpu.h"
 
 #include <ATen/Parallel.h>
 
 #include "utils.h"
 
 
-void uniform_sampling(const int64_t *rowptr, const int64_t *col, const int64_t *ts,
+void continuous_uniform_sampling(const int64_t *rowptr, const int64_t *col, const int64_t *ts,
                       const int64_t *start, int64_t *n_out, int64_t *e_out,
                       const int64_t numel, const int64_t walk_length,
-                      const int64_t t_start, const int64_t t_end, const bool reverse) {
+                      const int64_t *t_start, const int64_t *t_end, const bool reverse) {
 
   auto rand = torch::rand({numel, walk_length});
   auto rand_data = rand.data_ptr<float>();
@@ -20,7 +20,7 @@ void uniform_sampling(const int64_t *rowptr, const int64_t *col, const int64_t *
 
       n_out[n * (walk_length + 1)] = n_cur;
 
-      int64_t t = (reverse) ? t_end : t_start;
+      int64_t t = (reverse) ? t_end[n] : t_start[n];
       for (auto l = 0; l < walk_length; l++) {
         row_start = rowptr[n_cur], row_end = rowptr[n_cur + 1];
 
@@ -30,12 +30,12 @@ void uniform_sampling(const int64_t *rowptr, const int64_t *col, const int64_t *
         } else {
           // When traversing backward keep row_start the same, and decrease row_end
           if (reverse) {
-            row_start = (t_start) ? binary_search_min_cpu(t_start, row_start, row_end, ts) : row_start;
+            row_start = (t_start[n]) ? binary_search_min_cpu(t_start[n], row_start, row_end, ts) : row_start;
             row_end = binary_search_max_cpu(t, row_start, row_end, ts);
           // Else, keep row_end the same and increase row_start
           } else {
             row_start = binary_search_min_cpu(t, row_start, row_end, ts);
-            row_end = (t_end) ? binary_search_max_cpu(t_end, row_start, row_end, ts) : row_end;
+            row_end = (t_end[n]) ? binary_search_max_cpu(t_end[n], row_start, row_end, ts) : row_end;
           }
         }
 
@@ -56,17 +56,21 @@ void uniform_sampling(const int64_t *rowptr, const int64_t *col, const int64_t *
 
 
 std::tuple<torch::Tensor, torch::Tensor>
-temporal_random_walk_cpu(torch::Tensor rowptr, torch::Tensor col, torch::Tensor ts, torch::Tensor start,
-                int64_t walk_length, int64_t t_start, int64_t t_end, bool reverse) {
+continuous_trw_cpu(torch::Tensor rowptr, torch::Tensor col, torch::Tensor ts, torch::Tensor start,
+                int64_t walk_length, torch::Tensor t_start, torch::Tensor t_end, bool reverse) {
   CHECK_CPU(rowptr);
   CHECK_CPU(col);
   CHECK_CPU(start);
   CHECK_CPU(ts);
+  CHECK_CPU(t_start);
+  CHECK_CPU(t_end);
 
   CHECK_INPUT(rowptr.dim() == 1);
   CHECK_INPUT(col.dim() == 1);
   CHECK_INPUT(start.dim() == 1);
   CHECK_INPUT(ts.dim() == 1);
+  CHECK_INPUT(t_start.dim() == 1);
+  CHECK_INPUT(t_end.dim() == 1);
 
   auto n_out = torch::empty({start.size(0), walk_length + 1}, start.options());
   auto e_out = torch::empty({start.size(0), walk_length}, start.options());
@@ -77,9 +81,11 @@ temporal_random_walk_cpu(torch::Tensor rowptr, torch::Tensor col, torch::Tensor 
   auto start_data = start.data_ptr<int64_t>();
   auto n_out_data = n_out.data_ptr<int64_t>();
   auto e_out_data = e_out.data_ptr<int64_t>();
+  auto t_start_data = t_start.data_ptr<int64_t>();
+  auto t_end_data = t_end.data_ptr<int64_t>();
 
-  uniform_sampling(rowptr_data, col_data, ts_data, start_data, n_out_data, e_out_data,
-                     start.numel(), walk_length, t_start, t_end, reverse);
+  continuous_uniform_sampling(rowptr_data, col_data, ts_data, start_data, n_out_data, e_out_data,
+                     start.numel(), walk_length, t_start_data, t_end_data, reverse);
 
   return std::make_tuple(n_out, e_out);
 }
