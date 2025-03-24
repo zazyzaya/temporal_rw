@@ -35,7 +35,7 @@ if torch.version.cuda is not None and cuda_version != -1:  # pragma: no cover
             f'{major}.{minor}. Please reinstall the temporal_rw that '
             f'matches your PyTorch install.')
 
-from .temporal_rw import temporal_rw
+from .connector import temporal_rw
 
 __all__ = [
     'temporal_rw',

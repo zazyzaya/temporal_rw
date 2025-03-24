@@ -11,6 +11,9 @@ def temporal_rw(
     start: Tensor,
     walk_length: int,
     return_edge_indices: bool = False,
+    min_ts: int = None,
+    max_ts: int = None,
+    reverse: bool = False
 ) -> Union[Tensor, Tuple[Tensor, Tensor]]:
     """Samples random walks of length :obj:`walk_length` from all node indices
     in :obj:`start` in the graph given by :obj:`(row, col)` s.t. each edge is
@@ -42,8 +45,13 @@ def temporal_rw(
 
     :rtype: :class:`LongTensor`
     """
+    if min_ts is None:
+        min_ts = 0
+    if max_ts is None:
+        max_ts = 0
+
     node_seq, edge_seq = torch.ops.torch_cluster.temporal_random_walk(
-        rowptr, col, ts, start, walk_length)
+        rowptr, col, ts, start, walk_length, min_ts, max_ts, reverse)
 
     if return_edge_indices:
         return node_seq, edge_seq

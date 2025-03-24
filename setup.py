@@ -95,7 +95,7 @@ def get_extensions():
 
         Extension = CppExtension if suffix == 'cpu' else CUDAExtension
         extension = Extension(
-            f'temporal_rw._{name}_{suffix}',
+            f'temporal_walks._{name}_{suffix}',
             sources,
             include_dirs=[extensions_dir],
             define_macros=define_macros,
@@ -123,7 +123,7 @@ if torch.cuda.is_available() and torch.version.hip:
     include_package_data = False
 
 setup(
-    name='temporal_rw',
+    name='temporal_walks',
     version=__version__,
     description=('PyTorch extension for optimized temporal random walks through graphs'),
     author='Isaiah J. King',
