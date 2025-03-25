@@ -71,7 +71,7 @@ def get_extensions():
             define_macros += [('WITH_CUDA', None)]
             nvcc_flags = os.getenv('NVCC_FLAGS', '')
             nvcc_flags = [] if nvcc_flags == '' else nvcc_flags.split(' ')
-            nvcc_flags += ['-O2', '-dc']
+            nvcc_flags += ['-O2']
             extra_compile_args['nvcc'] = nvcc_flags
 
             if torch.version.hip:
