@@ -59,7 +59,6 @@ def temporal_rw(
 
     # Tensor with individual min/max_ts used per-node in the walk
     else:
-        print("Continuous!")
         assert  (isinstance(min_ts, Tensor) or min_ts is None) and \
                 (isinstance(max_ts, Tensor) or max_ts is None), \
                 "`max_ts` and `min_ts` must both be Tensors, both be ints, or one or both may be `None`"
